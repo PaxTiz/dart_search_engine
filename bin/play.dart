@@ -1,5 +1,5 @@
 import 'package:faker/faker.dart';
-import 'package:play/client.dart';
+import 'package:search_engine/client.dart';
 
 void main(List<String> arguments) async {
   final client = Client();
