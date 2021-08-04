@@ -4,11 +4,17 @@ import 'client.dart';
 
 void main(List<String> arguments) async {
   final client = Client();
-  await client.add(List.generate(20, (_) => {
-      'title': faker.lorem.words(10).join(' '),
-      'description': faker.lorem.sentence()
-    }), erase: true);
+  await client.add([
+    {
+      'title': 'hello world',
+      'description': "i'm a fake description"
+    },
+    {
+      'title': 'world hello',
+      'description': "descrition fake i'm a"
+    }
+  ], merge: true);
 
-  final result = await client.search('odio enim');
+  final result = await client.search('world description');
   print(result);
 }

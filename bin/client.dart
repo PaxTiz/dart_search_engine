@@ -9,11 +9,29 @@ class Client {
   }
 
   Future<int> add(List<Map<String, dynamic>> documents,
-      {bool erase = false}) async {
-    final map = _documentsAsMap(documents);
+      {bool merge = false}) async {
+    var map = {};
+    if (merge) {
+      final current = await _readFromFile();
+      final documentsAsMap = _documentsAsMap(documents);
+
+      documentsAsMap.forEach((key, value) {
+        if (current.containsKey(key)) {
+          if (!(current[key] as List).contains(value)) {
+            current[key].add(value);
+          }
+        } else {
+          current[key] = [value];
+        }
+      });
+
+      map = current;
+    } else {
+      map = _documentsAsMap(documents);
+    }
     final asJson = jsonEncode(map);
-    
-    return await _writeToFile(asJson, erase);
+
+    return await _writeToFile(asJson);
   }
 
   Future<List<dynamic>> search(String query) async {
@@ -30,10 +48,9 @@ class Client {
     return docs.toList();
   }
 
-  Future<int> _writeToFile(dynamic content, bool erase) async {
+  Future<int> _writeToFile(dynamic content) async {
     final file = File(path);
-    final writed = await file.writeAsString(content,
-        mode: erase ? FileMode.write : FileMode.append);
+    final writed = await file.writeAsString(content, mode: FileMode.write);
     return await writed.length();
   }
 
@@ -50,11 +67,11 @@ class Client {
 
   String _stringToKeywords(String str, {int length = 4}) {
     return str
-      .toLowerCase()
-      .split(' ')
-      .where((String e) => e.length >= length)
-      .join(' ')
-      .replaceAll('[^A-Za-z0-9]', '');
+        .toLowerCase()
+        .split(' ')
+        .where((String e) => e.length >= length)
+        .join(' ')
+        .replaceAll('[^A-Za-z0-9]', '');
   }
 
   Map<String, dynamic> _documentsAsMap(List<Map<String, dynamic>> documents) {
@@ -62,7 +79,8 @@ class Client {
     documents.forEach((doc) {
       final keys = doc.keys;
       final current = {};
-      /// Filter document values by length to create 
+
+      /// Filter document values by length to create
       /// 4 alpha-numerics characters strings
       keys.forEach((k) {
         if (doc[k] is String) {
